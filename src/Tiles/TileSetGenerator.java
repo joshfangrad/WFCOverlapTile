@@ -16,7 +16,7 @@ public class TileSetGenerator {
     public TileSet generateTileSetFromImage(String path) throws TileException {
         int[][] image = ImageLoad.convertImgTo2DRGB(path);
 
-        TileSet tiles = new TileSet();
+        List<Tile> tiles = new ArrayList<>();
 
         if (image.length < Settings.TILE_WIDTH || image[0].length < Settings.TILE_HEIGHT) {
             throw new TileException("Image is smaller than base tile size");
@@ -34,19 +34,24 @@ public class TileSetGenerator {
                 }
 
                 for (int[][] tile : tilesToAdd) {
-                    tiles.addOrIncrementTile(new Tile(tile));
+                    Tile newTile = new Tile(tile);
+                    if (tiles.contains(newTile)) {
+                        tiles.get(tiles.indexOf(newTile)).incrementFrequency();
+                    } else {
+                        tiles.add(newTile);
+                    }
                 }
             }
         }
 
         calculateNeighbours(tiles);
 
-        return tiles;
+        return new TileSet(tiles);
     }
 
-    private void calculateNeighbours(TileSet tiles) {
-        for (Tile tile : tiles.getTiles().keySet()) {
-            for (Tile tile2 : tiles.getTiles().keySet()) {
+    private void calculateNeighbours(List<Tile> tiles) {
+        for (Tile tile : tiles) {
+            for (Tile tile2 : tiles) {
                 for (Direction dir : Direction.values()) {
                     if (tilesMatch(tile, tile2, dir)) {
                         tile.addNeighbour(dir, tile2);

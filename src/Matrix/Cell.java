@@ -4,8 +4,8 @@ import Tiles.Tile;
 
 import java.awt.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static Util.Util.mixColors;
 
@@ -16,7 +16,7 @@ public class Cell {
     private final int posX;
     private final int posY;
     private Color color;
-    private HashMap<Tile, Integer> options = new HashMap<>();
+    private HashSet<Tile> options = new HashSet<>();
     private int previousTotalOptions = -1;
     private float entropy;
 
@@ -33,14 +33,14 @@ public class Cell {
 
         previousTotalOptions = options.size();
         float totalFrequency = 0;
-        for (int count : options.values()) {
-            totalFrequency += count;
+        for (Tile tile : options) {
+            totalFrequency += tile.getFrequency();
         }
 
         // Shannon entropy = -sum(p * log2(p))
         float e = 0;
-        for (int count : options.values()) {
-            float p = count / totalFrequency;
+        for (Tile tile : options) {
+            float p = tile.getFrequency() / totalFrequency;
             if (p > 0) {
                 e -= p * (Math.log(p) / Math.log(2));
             }
@@ -78,15 +78,15 @@ public class Cell {
         this.checked = checked;
     }
 
-    public HashMap<Tile, Integer> getOptions() {
+    public HashSet<Tile> getOptions() {
         return options;
     }
 
-    public void addOption(Tile tile, int frequency) {
-        this.options.put(tile, frequency);
+    public void addOption(Tile tile) {
+        this.options.add(tile);
     }
 
-    public void setOptions(HashMap<Tile, Integer> options) {
+    public void setOptions(HashSet<Tile> options) {
         this.options = options;
     }
     public void clearOptions() {
@@ -109,7 +109,7 @@ public class Cell {
         if (options.isEmpty()) {
             color = Color.PINK;
         } else {
-            int[] colors = options.keySet().stream().mapToInt(Tile::getCenterColor).toArray();
+            int[] colors = options.stream().mapToInt(Tile::getCenterColor).toArray();
             color = new Color(mixColors(colors));
         }
     }

@@ -68,13 +68,12 @@ public class Solver {
 //            return; // Skip this step, retry the next one
 //        }
 
-        List<Tile> options = new ArrayList<>(chosenCell.getOptions().keySet());
+        List<Tile> options = new ArrayList<>(chosenCell.getOptions());
         Tile pick = options.get(random.nextInt(options.size()));
-        int pickFreq = chosenCell.getOptions().get(pick);
 
         // Collapse cell
         chosenCell.clearOptions();
-        chosenCell.addOption(pick, pickFreq);
+        chosenCell.addOption(pick);
 
         // Reduce entropy
         reduceEntropy(chosenCell, 0);
@@ -111,13 +110,13 @@ public class Solver {
         if (!neighbour.isCollapsed()) {
             ArrayList<Tile> validOptions = new ArrayList<>();
             // get all options' direction possibilities
-            for (Tile option : cell.getOptions().keySet()) {
+            for (Tile option : cell.getOptions()) {
                 validOptions.addAll(option.getPossibleInDir(dir));
             }
 
             // filter neighbour's options
             ArrayList<Tile> newOptions = new ArrayList<>();
-            for (Tile neighbourOption : neighbour.getOptions().keySet()) {
+            for (Tile neighbourOption : neighbour.getOptions()) {
                 if (validOptions.contains(neighbourOption)) {
                     newOptions.add(neighbourOption);
                 }
@@ -128,11 +127,11 @@ public class Solver {
 
             // update any new options changes
             if (newOptions.size() < neighbour.getOptions().size()) {
-                HashMap<Tile, Integer> neighbourOptions = neighbour.getOptions();
+                HashSet<Tile> neighbourOptions = neighbour.getOptions();
 
                 // Keep only options present in newOptions
                 Set<Tile> valid = new HashSet<>(newOptions);
-                neighbourOptions.keySet().retainAll(valid);
+                neighbourOptions.retainAll(valid);
 
                 return true;
             }
@@ -144,7 +143,7 @@ public class Solver {
         cells = matrix.getCells();
         running = true;
         for (Cell cell : cells) {
-            cell.setOptions(new HashMap<>(tileSet.getTiles()));
+            cell.setOptions(new HashSet<>(tileSet.getTiles()));
             cell.setCollapsed(false);
 
         }

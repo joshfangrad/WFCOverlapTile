@@ -4,14 +4,14 @@ import java.util.*;
 
 public class Tile {
     private final int[][] pixels;
-    private final HashMap<Direction, List<Tile>> possibleNeighbours = new HashMap<>();
+    private final EnumMap<Direction, HashSet<Tile>> possibleNeighbours = new EnumMap<>(Direction.class);
     private int frequency;
 
     public Tile(int[][] pixels) {
         this.pixels = pixels;
         frequency = 1;
         for (Direction dir : Direction.values()) {
-            possibleNeighbours.put(dir, new ArrayList<>());
+            possibleNeighbours.put(dir, new HashSet<>());
         }
     }
 
@@ -19,7 +19,7 @@ public class Tile {
        possibleNeighbours.get(dir).add(tile);
     }
 
-    public List<Tile> getPossibleInDir(Direction dir) {
+    public HashSet<Tile> getPossibleInDir(Direction dir) {
         return possibleNeighbours.get(dir);
     }
 
@@ -31,9 +31,12 @@ public class Tile {
         return pixels;
     }
 
-    @Override
-    public int hashCode() {
-        return Arrays.deepHashCode(pixels);
+    public void incrementFrequency() {
+        frequency++;
+    }
+
+    public int getFrequency() {
+        return frequency;
     }
 
     @Override
@@ -42,5 +45,10 @@ public class Tile {
         if (obj == null || getClass() != obj.getClass()) return false;
         Tile t = (Tile)obj;
         return Arrays.deepEquals(pixels, t.pixels);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(pixels);
     }
 }

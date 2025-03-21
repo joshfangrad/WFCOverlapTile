@@ -2,18 +2,17 @@ package Tiles;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public class TileSet {
-    private final HashMap<Tile, Integer> tiles = new HashMap<>();
+    private final HashSet<Tile> tiles;
 
-    public TileSet() {
+    public TileSet(List<Tile> tileList) {
+        tiles = new HashSet<>(tileList);
     }
 
-    public void addOrIncrementTile(Tile tile) {
-        tiles.put(tile, tiles.getOrDefault(tile, 0) + 1);
-    }
 
-    public HashMap<Tile, Integer> getTiles() {
+    public HashSet<Tile> getTiles() {
         return tiles;
     }
 }
