@@ -13,26 +13,37 @@ public class Solver {
     private final Matrix matrix;
     private final TileSet tileSet;
     private final Random random;
+    private final float randomRatio;
     private boolean running = false;
+    private final boolean allowImperfect;
     private HashSet<Cell> cells = new HashSet<>();
 
-    public Solver(Matrix matrix, TileSet tileSet, long seed) { this.matrix = matrix;
+    /**
+     *
+     * @param matrix matrix to do work on.
+     * @param tileSet the set of tiles for rule checking.
+     * @param allowImperfect allow the solver to continue with tile conflictions instead of failing.
+     * @param randomRatio ratio of pure random to weighted random for cell collapse, where 1 is pure random.
+     * @param seed (optional) seed of the randomness.
+     */
+    public Solver(Matrix matrix, TileSet tileSet, boolean allowImperfect, float randomRatio, long seed) {
+        this.matrix = matrix;
         this.tileSet = tileSet;
+        this.allowImperfect = allowImperfect;
+        this.randomRatio = randomRatio;
         this.random = new Random(seed);
     }
 
-    public Solver(Matrix matrix, TileSet tileSet) {
-        this(matrix, tileSet, (long)(System.currentTimeMillis() + Math.random()));
+    public Solver(Matrix matrix, TileSet tileSet, boolean allowImperfect, float randomRatio) {
+        this(matrix, tileSet, allowImperfect, randomRatio, (long)(System.currentTimeMillis() + Math.random()));
     }
 
     public boolean step() {
-
         if (!running) {
             setupSolver();
         }
 
         for (Cell cell : cells) {
-            cell.calculateEntropy();
             cell.setChecked(false);
         }
 
@@ -52,7 +63,7 @@ public class Solver {
         }
 
         if (lowest.isEmpty()) {
-            //TODO: add way to end loop when done
+            running = false;
             return true;
         }
 
@@ -61,15 +72,16 @@ public class Solver {
             System.out.println("SOLVE PROBLEM - STOPPING");
             throw new SolveException("Could not solve");
         }
-//        if (chosenCell.getOptions().isEmpty()) {
-//            System.out.println("Backtracking...");
-//            chosenCell.setCollapsed(false);
-//            chosenCell.setOptions(new HashMap<>(tileSet.getTiles()));
-//            return; // Skip this step, retry the next one
-//        }
 
         List<Tile> options = new ArrayList<>(chosenCell.getOptions());
-        Tile pick = options.get(random.nextInt(options.size()));
+        Tile pick;
+
+        // ratio of pure random to weighted random for cell collapse, where 1 is pure random. interesting to play with
+        if (random.nextFloat() < randomRatio) {
+            pick = options.get(random.nextInt(options.size()));
+        } else {
+            pick = weightedRandomSelection(options);
+        }
 
         // Collapse cell
         chosenCell.clearOptions();
@@ -94,6 +106,7 @@ public class Solver {
             return;
         }
 
+        cell.calculateEntropy();
         cell.setChecked(true);
 
         Tuple<Cell, Direction>[] neighbours = matrix.getNeighbours(cell.getPosX(), cell.getPosY());
@@ -123,7 +136,7 @@ public class Solver {
             }
 
             // TODO ignoring no option cases is a temp "fix". consider backtracking
-            if (newOptions.isEmpty()) return false;
+            if (allowImperfect && newOptions.isEmpty()) return false;
 
             // update any new options changes
             if (newOptions.size() < neighbour.getOptions().size()) {
@@ -132,6 +145,7 @@ public class Solver {
                 // Keep only options present in newOptions
                 Set<Tile> valid = new HashSet<>(newOptions);
                 neighbourOptions.retainAll(valid);
+                neighbour.calculateEntropy();
 
                 return true;
             }
@@ -145,7 +159,28 @@ public class Solver {
         for (Cell cell : cells) {
             cell.setOptions(new HashSet<>(tileSet.getTiles()));
             cell.setCollapsed(false);
-
         }
+    }
+
+    private Tile weightedRandomSelection(List<Tile> options) {
+        // total frequency
+        double totalFrequency = 0;
+        for (Tile tile : options) {
+            totalFrequency += tile.getFrequency();
+        }
+
+        double value = random.nextDouble() * totalFrequency;
+
+        // Find the tile that corresponds to the random value
+        double cumulativeFrequency = 0;
+        for (Tile tile : options) {
+            cumulativeFrequency += tile.getFrequency();
+            if (value <= cumulativeFrequency) {
+                return tile;
+            }
+        }
+
+        // Fallback (should never happen unless frequencies are all zero)
+        return options.get(options.size() - 1);
     }
 }

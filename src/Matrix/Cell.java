@@ -3,7 +3,6 @@ package Matrix;
 import Tiles.Tile;
 
 import java.awt.*;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 
@@ -11,14 +10,13 @@ import static Util.Util.mixColors;
 
 public class Cell {
     private boolean collapsed = false;
-    private boolean userDrawn = false;
     private boolean checked = false;
     private final int posX;
     private final int posY;
     private Color color;
     private HashSet<Tile> options = new HashSet<>();
     private int previousTotalOptions = -1;
-    private float entropy;
+    private float entropy = Float.MAX_VALUE;
 
     public Cell(int x, int y) {
         this.posX = x;
@@ -60,14 +58,6 @@ public class Cell {
     public void setCollapsed(boolean collapsed) {
         this.collapsed = collapsed;
         calculateColor();
-    }
-
-    public boolean isUserDrawn() {
-        return userDrawn;
-    }
-
-    public void setUserDrawn(boolean drawn) {
-        userDrawn = drawn;
     }
 
     public boolean isChecked() {

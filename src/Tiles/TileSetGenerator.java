@@ -13,7 +13,7 @@ public class TileSetGenerator {
     public TileSetGenerator() {
     }
 
-    public TileSet generateTileSetFromImage(String path) throws TileException {
+    public TileSet generateTileSetFromImage(String path, boolean allowRotation) throws TileException {
         int[][] image = ImageLoad.convertImgTo2DRGB(path);
 
         List<Tile> tiles = new ArrayList<>();
@@ -28,7 +28,7 @@ public class TileSetGenerator {
                 List<int[][]> tilesToAdd = new ArrayList<>();
 
                 tilesToAdd.add(grabTile(i, j, image));
-                if (Settings.TILE_ROTATION) {
+                if (allowRotation) {
                     List<int[][]> rotations = generateRotations(grabTile(i, j, image));
                     tilesToAdd.addAll(rotations);
                 }
